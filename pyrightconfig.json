@@ -1,7 +1,0 @@
-{
-  "include": ["."],
-  "exclude": [".venv"],
-  "extraPaths": ["."],
-  "venvPath": ".",
-  "venv": ".venv"
-}

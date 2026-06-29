@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+lifecycle_log.json
+.curriculum_seeded
+# Added by code-review-graph
+.code-review-graph/
