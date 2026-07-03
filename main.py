@@ -1,9 +1,6 @@
 """
 FastAPI entry point.
 
-Day 1 goal: server starts, health check works,
-one real /api/memory/remember endpoint is live.
-
 Run with:
     uvicorn main:app --reload
 """
@@ -22,6 +19,7 @@ sys.path.append(str(Path(__file__).resolve().parent))
 from config import config
 from app.cognee_ops import improve, forget, recall, remember
 from app.routers import memory as memory_router
+from app.routers import tutoring as tutoring_router
 
 
 @asynccontextmanager
@@ -47,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(memory_router.router, prefix="/api/memory", tags=["memory"])
+app.include_router(tutoring_router.router, prefix="/api/tutoring", tags=["tutoring"])
 
 
 @app.get("/health")
