@@ -1,0 +1,95 @@
+.memory-lifecycle {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.memory-lifecycle-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.memory-blob {
+  fill: var(--ink);
+}
+
+.memory-link {
+  stroke: var(--ink);
+}
+
+.memory-lifecycle-content {
+  position: relative;
+  z-index: 1;
+  padding: 96px 40px 0;
+  max-width: 1080px;
+}
+
+.memory-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--grey-400);
+  margin-bottom: 16px;
+}
+
+.memory-heading {
+  font-size: clamp(48px, 6vw, 88px);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 28px;
+}
+
+.memory-copy {
+  max-width: 46ch;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  color: var(--grey-700);
+}
+
+.memory-side-notes {
+  position: absolute;
+  z-index: 1;
+  top: 78%;
+  right: 40px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 340px;
+}
+
+.memory-side-note {
+  font-size: 19px;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+  color: var(--grey-700);
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .memory-lifecycle-content {
+    padding: 64px 24px 0;
+  }
+
+  .memory-side-notes {
+    position: static;
+    transform: none;
+    max-width: none;
+    gap: 24px;
+    margin: 32px 24px 0;
+  }
+
+  .memory-side-note {
+    text-align: left;
+    font-size: 16px;
+  }
+}
