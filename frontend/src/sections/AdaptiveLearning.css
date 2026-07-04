@@ -1,0 +1,222 @@
+.adaptive {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  padding: 0.5rem;
+  background-color: var(--paper);
+}
+
+.adaptive h1 {
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.adaptive p {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.adaptive img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.adaptive-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.adaptive-col {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  will-change: transform;
+}
+
+.adaptive-col h1 {
+  color: var(--ink);
+  width: 60%;
+}
+
+.adaptive-col p {
+  color: var(--grey-700);
+  width: 60%;
+}
+
+/* rest-state transforms — the off-screen starting positions each phase
+   animates away from/back to. */
+.adaptive-col-2 {
+  transform: translateX(100%);
+}
+.adaptive-col-3 {
+  transform: translateX(100%) translateY(100%);
+  padding: 0.5rem;
+}
+.adaptive-col-4 {
+  transform: translateX(100%) translateY(100%);
+}
+
+.adaptive-col-content,
+.adaptive-col-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+}
+
+.adaptive-col-content-wrapper,
+.adaptive-col-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3rem;
+  overflow: hidden;
+}
+
+.adaptive-col-content-wrapper {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.adaptive-col-content-wrapper-2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.adaptive-col-img-1,
+.adaptive-col-img-2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.adaptive-col-img-2 {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+}
+
+.adaptive-col-img-2 img {
+  object-fit: contain;
+  transform: scale(1.25);
+}
+
+.adaptive-col-4 img {
+  object-fit: contain;
+}
+
+.adaptive-line {
+  overflow: hidden;
+}
+
+.adaptive-line span {
+  display: block;
+  will-change: transform;
+}
+
+@media (max-width: 1000px) {
+  .adaptive {
+    height: auto;
+    overflow: visible;
+    padding: 1rem 1rem 3rem;
+  }
+
+  .adaptive-wrapper {
+    height: auto;
+  }
+
+  .adaptive-wrapper .adaptive-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .adaptive h1 {
+    font-size: 1.25rem;
+  }
+
+  .adaptive p {
+    font-size: 0.85rem;
+  }
+
+  .adaptive-col h1,
+  .adaptive-col p {
+    width: 100%;
+  }
+
+  .adaptive-col {
+    position: static;
+    width: 100%;
+    height: auto;
+    opacity: 1;
+  }
+
+  .adaptive-col-2,
+  .adaptive-col-3,
+  .adaptive-col-4 {
+    transform: none;
+  }
+
+  .adaptive-col-2,
+  .adaptive-col-3 {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .adaptive-col-content,
+  .adaptive-col-img {
+    height: auto;
+    padding: 0;
+  }
+
+  .adaptive-col-content-wrapper,
+  .adaptive-col-content-wrapper-2,
+  .adaptive-col-img-wrapper {
+    position: static;
+    height: auto;
+    border-radius: 1.5rem;
+  }
+
+  .adaptive-col-content-wrapper,
+  .adaptive-col-content-wrapper-2 {
+    padding: 1.75rem;
+    gap: 1rem;
+  }
+
+  .adaptive-col-img-1,
+  .adaptive-col-img-2 {
+    position: static;
+    width: 100%;
+    height: auto;
+    clip-path: none;
+  }
+
+  .adaptive-col-img-wrapper {
+    height: 220px;
+  }
+
+  .adaptive-col-img-2 img {
+    object-fit: cover;
+    transform: none;
+  }
+
+  .adaptive-col-4 img {
+    object-fit: cover;
+  }
+}
