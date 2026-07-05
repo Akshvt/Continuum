@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict, deque
 from typing import Any
 
 from openai import AsyncOpenAI
@@ -87,6 +88,26 @@ def _fallback_question(current_concept: str, focus_concept: str) -> str:
 def _display_concept(concept: str) -> str:
     return concept.replace("_", " ").strip()
 
+import random as _random
+
+# Question format pool — a random subset is injected into each prompt so the
+# LLM sees variety instead of one template it can lock onto.
+_QUESTION_FORMATS = [
+    "Direct definition: 'What does the term ___ mean in Python?'",
+    "Predict-the-output: 'What will this code print?\\n```python\\nsome_code_here\\n```'",
+    "Fill-in-the-blank: 'Complete the line: ___ = 42  — what data type is this value?'",
+    "Scenario-based: 'A student writes `x = \"5\" + 3`. What happens and why?'",
+    "Compare-and-contrast: 'How are ___ and ___ different in Python?'",
+    "Fix-the-bug: 'This code has an error — what is wrong and how would you fix it?'",
+    "True-or-false with justification: 'True or false: ___ — explain your reasoning.'",
+    "Short-answer application: 'Write one line of Python that demonstrates ___.'",
+]
+
+# Per-student cache of recently generated questions (kept in memory, lost on restart).
+# Used to tell the LLM what NOT to repeat.
+_recent_questions_cache: dict[str, deque[str]] = {}
+
+
 async def _generate_question(
     student_id: str,
     current_concept: str,
@@ -94,34 +115,56 @@ async def _generate_question(
     student_context: str,
     curriculum_context_text: str,
     teaching_style: str = DEFAULT_TEACHING_STYLE,
+    recent_questions: list[str] | None = None,
 ) -> str:
     if not config.LLM_API_KEY:
         return _fallback_question(current_concept, focus_concept)
+
+    # Pick 4 random formats so the LLM sees genuine variety each time
+    sampled_formats = _random.sample(_QUESTION_FORMATS, min(4, len(_QUESTION_FORMATS)))
+    format_list = "\n".join(f"  - {fmt}" for fmt in sampled_formats)
+
+    # Build a "do NOT repeat" block from recently asked questions
+    recent_block = ""
+    if recent_questions:
+        recent_lines = "\n".join(f'  - "{q}"' for q in recent_questions[-3:])
+        recent_block = (
+            f"\n\nRecently asked questions (DO NOT repeat or closely rephrase these):\n"
+            f"{recent_lines}"
+        )
 
     try:
         client = _make_llm_client()
         response = await client.chat.completions.create(
             model=config.LLM_MODEL,
-            temperature=0.4,
-            max_tokens=120,
+            temperature=0.75,
+            max_tokens=180,
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "You are a tutoring engine. Write exactly one concise student question. "
-                        "Do not include answers, hints, bullets, or markdown."
+                        "You are a Python tutoring engine that creates engaging, varied questions.\n\n"
+                        "RULES:\n"
+                        "1. Write exactly ONE question. No answers, no hints, no bullet lists, no markdown headers.\n"
+                        "2. You MUST pick a DIFFERENT question format each time. Choose from formats like:\n"
+                        f"{format_list}\n"
+                        "3. If the teaching style is 'worked_example_first', include a short code snippet.\n"
+                        "   If 'analogy_first', frame the question using a real-world analogy.\n"
+                        "   If 'question_first', ask a direct conceptual question.\n"
+                        "4. Vary sentence structure — never start with 'What is the difference between'.\n"
+                        "5. Keep the question concise (1-3 sentences max, or a short code block + one sentence)."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"Student ID: {student_id}\n"
-                        f"Current concept: {current_concept}\n"
-                        f"Focus concept: {focus_concept}\n"
+                        f"Concept being studied: {current_concept}\n"
+                        f"Focus area: {focus_concept}\n"
                         f"Teaching style: {teaching_style}\n"
-                        f"Student recall:\n{student_context}\n\n"
-                        f"Curriculum graph:\n{curriculum_context_text}\n\n"
-                        "Write one question that checks understanding of the focus concept while staying aligned to the current concept."
+                        f"Student history:\n{student_context or '(new student, no history yet)'}\n\n"
+                        f"Curriculum context:\n{curriculum_context_text}\n"
+                        f"{recent_block}\n\n"
+                        "Generate one question."
                     ),
                 },
             ],
@@ -134,6 +177,7 @@ async def _generate_question(
         logger.error("question generation: LLM call failed (%s), using fallback", exc)
 
     return _fallback_question(current_concept, focus_concept)
+
 
 
 async def generate_tutoring_question(student_id: str, current_concept: str) -> dict[str, Any]:
@@ -177,6 +221,9 @@ async def generate_tutoring_question(student_id: str, current_concept: str) -> d
     curriculum_text = _render_results(curriculum_results) or curriculum_context()
     focus_concept = _choose_focus_concept(normalized_current, f"{student_text}\n{curriculum_text}")
     display_focus_concept = _display_concept(focus_concept)
+    # Pull recently asked questions from cache to feed the "do not repeat" block
+    recent_qs = list(_recent_questions_cache.get(student_id, []))
+
     question = await _generate_question(
         student_id=student_id,
         current_concept=display_current,
@@ -184,7 +231,13 @@ async def generate_tutoring_question(student_id: str, current_concept: str) -> d
         student_context=student_text,
         curriculum_context_text=curriculum_text,
         teaching_style=teaching_style,
+        recent_questions=recent_qs,
     )
+
+    # Store in cache for next call (keep last 5 per student)
+    if student_id not in _recent_questions_cache:
+        _recent_questions_cache[student_id] = deque(maxlen=5)
+    _recent_questions_cache[student_id].append(question)
 
     return {
         "student_id": student_id,

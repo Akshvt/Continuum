@@ -181,7 +181,13 @@ async def _check_improve_trigger(student_id: str) -> list[str]:
 
 async def _check_forget_trigger(student_id: str, concept: str) -> list[str]:
     """Fire forget() when a concept has N consecutive correct answers
-    after a previously logged misconception on that concept.
+    after previously logged misconceptions on that concept.
+
+    Tracks the streak per CONCEPT, not per exact misconception text.
+    When the streak threshold is met, ALL active (not-yet-forgotten)
+    misconceptions for this concept are resolved together. This handles
+    the case where the LLM grader produces differently-worded
+    misconception text for the same underlying misunderstanding.
     """
     log = get_lifecycle_log(student_id)
     n = config.FORGET_MISCONCEPTION_AFTER_N_CORRECT
@@ -201,42 +207,64 @@ async def _check_forget_trigger(student_id: str, concept: str) -> list[str]:
     if not all_correct:
         return []
 
-    # Look for the most recent misconception BEFORE the streak
-    misconception_event = None
-    for event in concept_events[n:]:
-        if event.get("misconception"):
-            misconception_event = event
-            break
+    # Collect ALL misconceptions ever logged for this concept
+    all_misconceptions = [
+        e for e in concept_events
+        if e.get("misconception")
+    ]
 
-    if misconception_event is None:
+    if not all_misconceptions:
         return []
 
-    misconception_text = misconception_event["misconception"]
-    misconception_data_id = misconception_event.get("data_id")
-
-    # Check that we haven't already forgotten this exact misconception
-    already_forgotten = any(
+    # Check which misconceptions for this concept have already been forgotten
+    already_forgotten_on_concept = any(
         e.get("operation") == "forget"
-        and e.get("misconception") == misconception_text
+        and e.get("concept") == concept
         for e in log
     )
-    if already_forgotten:
+
+    # Collect the set of unique misconception texts NOT yet forgotten.
+    # We use the forget log to check by concept scope, not exact text.
+    forgotten_texts = set()
+    for e in log:
+        if e.get("operation") == "forget" and e.get("misconception"):
+            forgotten_texts.add(e["misconception"])
+
+    active_misconceptions = [
+        e for e in all_misconceptions
+        if e["misconception"] not in forgotten_texts
+    ]
+
+    if not active_misconceptions:
         return []
 
-    logger.info(
-        "AUTO-TRIGGER forget: student=%s resolved misconception '%s' on concept=%s "
-        "(%d consecutive correct, data_id=%s)",
-        student_id, misconception_text, concept, n, misconception_data_id,
-    )
-    print(
-        f"[auto-trigger] FORGET fired for student={student_id} "
-        f"concept={concept} misconception='{misconception_text}' "
-        f"({n} consecutive correct answers)"
-    )
-    await forget_resolved_misconception(
-        student_id=student_id,
-        misconception=misconception_text,
-        confirmed_correct_count=n,
-        data_id=misconception_data_id,
-    )
-    return [f"forget (misconception: '{misconception_text}')"]
+    # Forget ALL active misconceptions for this concept
+    triggers_fired = []
+    for misc_event in active_misconceptions:
+        misconception_text = misc_event["misconception"]
+        misconception_data_id = misc_event.get("data_id")
+
+        logger.info(
+            "AUTO-TRIGGER forget: student=%s resolved misconception '%s' on concept=%s "
+            "(%d consecutive correct, data_id=%s)",
+            student_id, misconception_text, concept, n, misconception_data_id,
+        )
+        print(
+            f"[auto-trigger] FORGET fired for student={student_id} "
+            f"concept={concept} misconception='{misconception_text}' "
+            f"({n} consecutive correct answers)"
+        )
+        await forget_resolved_misconception(
+            student_id=student_id,
+            misconception=misconception_text,
+            confirmed_correct_count=n,
+            data_id=misconception_data_id,
+        )
+        triggers_fired.append(f"forget (misconception: '{misconception_text}')")
+
+        # Mark this text as forgotten to avoid duplicate processing
+        # within this same batch
+        forgotten_texts.add(misconception_text)
+
+    return triggers_fired
+
