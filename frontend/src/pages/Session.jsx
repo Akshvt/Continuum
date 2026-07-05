@@ -164,6 +164,10 @@ function Session() {
   const [currentQuestion, setCurrentQuestion] = useState('')
   const [currentStrategy, setCurrentStrategy] = useState('')
 
+  // ── Progression tracking (per session, resets on concept switch) ─
+  // correctStreak: consecutive correct answers on the current concept
+  const correctStreakRef = useRef(0)
+
   // ── Dashboard panels ──────────────────────
   const [mastery, setMastery] = useState([])
   const [misconceptions, setMisconceptions] = useState([])
@@ -203,14 +207,20 @@ function Session() {
     try {
       const data = await getDashboard(auth.student_id)
       if (data.concepts?.length) {
-        setMastery(
-          data.concepts
-            .filter((c) => c.mastery_level != null)
-            .map((c) => ({
-              name: conceptLabel(c.concept),
-              pct: Math.round((c.mastery_level ?? 0) * 100),
-            })),
-        )
+        // Only extract entries that actually have a mastery_level value.
+        // If the filtered list is empty it means Cognee recall is still
+        // catching up after a background remember() — keep last known
+        // good state rather than blanking the panel.
+        const withMastery = data.concepts
+          .filter((c) => c.mastery_level != null)
+          .map((c) => ({
+            name: conceptLabel(c.concept),
+            pct: Math.round((c.mastery_level ?? 0) * 100),
+          }))
+        if (withMastery.length > 0) {
+          setMastery(withMastery)
+        }
+        // empty withMastery → leave mastery state untouched
       }
     } catch {
       // Non-fatal — dashboard shows empty state
@@ -275,7 +285,7 @@ function Session() {
     }
   }, [auth.student_id])
 
-  const loadQuestion = useCallback(async (conceptId) => {
+  const loadQuestion = useCallback(async (conceptId, signal) => {
     setIsThinking(true)
     setApiError('')
     try {
@@ -283,7 +293,7 @@ function Session() {
       const data = await tutoringQuestion({
         student_id: auth.student_id,
         current_concept: conceptId,
-      })
+      }, signal)
       const strategy = data.strategy ?? 'default'
       setCurrentQuestion(data.question)
       setCurrentStrategy(strategy)
@@ -298,22 +308,31 @@ function Session() {
         text: data.question,
       })
     } catch (err) {
+      if (err.name === 'AbortError') return
       setApiError(`Could not load question: ${err.message}`)
       addMessage({
         kind: 'tutor',
         text: `⚠ Backend unavailable — ${err.message}`,
       })
     } finally {
-      setIsThinking(false)
+      if (!signal?.aborted) {
+        setIsThinking(false)
+      }
     }
   }, [auth.student_id, addMessage, pushLog])
 
   // On mount and concept change: load everything in parallel
   useEffect(() => {
+    const controller = new AbortController()
+    correctStreakRef.current = 0   // reset streak on any concept change
     setMessages([])
     loadDashboard()
     loadTimeline()
-    loadQuestion(concept)
+    loadQuestion(concept, controller.signal)
+    
+    return () => {
+      controller.abort()
+    }
   }, [concept]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Background polling for dashboard/timeline/status
@@ -380,7 +399,9 @@ function Session() {
         misconception: result.misconception ?? null,
       })
 
-      // Update mastery panel
+      // Update mastery panel immediately from the local delta (authoritative,
+      // no Cognee round-trip lag). This is the value the poll must NOT overwrite
+      // with an empty result (handled in loadDashboard).
       if (!result.grading_unavailable) {
         setMastery((prev) => {
           const label = conceptLabel(concept)
@@ -412,21 +433,59 @@ function Session() {
         )
       }
 
-      // Load next question (short delay for readability)
-      window.setTimeout(async () => {
-        try {
-          const next = await tutoringQuestion({
-            student_id: auth.student_id,
-            current_concept: concept,
-          })
-          setCurrentQuestion(next.question)
-          setCurrentStrategy(next.strategy ?? currentStrategy)
-          addMessage({ kind: 'tutor', text: next.question })
-        } catch {
-          // Silently skip next question fetch
+      // ── Concept progression ──────────────────────────────────────────
+      // Track consecutive correct answers on this concept (not counting
+      // unavailable grades). Advance to the next concept in the curriculum
+      // ladder after 2 correct answers in a row, so the student never
+      // keeps seeing verbatim-similar questions on the same topic.
+      let nextConceptId = concept
+      if (!result.grading_unavailable) {
+        if (result.is_correct) {
+          correctStreakRef.current += 1
+          const ADVANCE_AFTER = 2
+          if (correctStreakRef.current >= ADVANCE_AFTER) {
+            correctStreakRef.current = 0
+            const idx = CONCEPTS.findIndex((c) => c.id === concept)
+            if (idx !== -1 && idx < CONCEPTS.length - 1) {
+              nextConceptId = CONCEPTS[idx + 1].id
+              addMessage({
+                kind: 'toast',
+                fn: 'improve',
+                text: `mastered ${conceptLabel(concept)} — advancing to ${conceptLabel(nextConceptId)}`,
+              })
+              setConcept(nextConceptId)
+              setConceptPending(nextConceptId)
+            }
+          }
+        } else {
+          // Wrong answer resets the streak
+          correctStreakRef.current = 0
         }
+      }
+
+      // Load next question (short delay for readability).
+      // If concept advanced, setConcept triggers the useEffect which calls
+      // loadQuestion automatically — so we only need to fetch here when
+      // staying on the same concept.
+      if (nextConceptId === concept) {
+        window.setTimeout(async () => {
+          try {
+            const next = await tutoringQuestion({
+              student_id: auth.student_id,
+              current_concept: concept,
+            })
+            setCurrentQuestion(next.question)
+            setCurrentStrategy(next.strategy ?? currentStrategy)
+            addMessage({ kind: 'tutor', text: next.question })
+          } catch {
+            // Silently skip next question fetch
+          }
+          setIsThinking(false)
+        }, 800)
+      } else {
+        // concept changed — useEffect will fire loadQuestion, just unblock input
         setIsThinking(false)
-      }, 800)
+      }
     } catch (err) {
       setApiError(`Could not submit answer: ${err.message}`)
       addMessage({ kind: 'tutor', text: `⚠ ${err.message}` })

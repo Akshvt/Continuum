@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { GoogleIcon, AppleIcon } from '../components/AuthIcons'
+import { GoogleIcon } from '../components/AuthIcons'
 import { useAuth } from '../context/AuthContext.jsx'
 import { authSignup } from '../lib/api.js'
 import './Login.css'
@@ -45,10 +45,6 @@ function SignUp() {
               <button type="button" className="btn-oauth" disabled>
                 <GoogleIcon />
                 Sign up with Google
-              </button>
-              <button type="button" className="btn-oauth" disabled>
-                <AppleIcon />
-                Sign up with Apple
               </button>
             </div>
 

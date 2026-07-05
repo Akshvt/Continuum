@@ -12,10 +12,11 @@ const BASE = import.meta.env.VITE_API_URL || ''
 // Internal helper
 // ─────────────────────────────────────────────
 
-async function request(method, path, body) {
+async function request(method, path, body, signal) {
   const init = {
     method,
     headers: { 'Content-Type': 'application/json' },
+    signal,
   }
   if (body !== undefined) {
     init.body = JSON.stringify(body)
@@ -29,8 +30,8 @@ async function request(method, path, body) {
   return res.json()
 }
 
-const get  = (path)       => request('GET',  path)
-const post = (path, body) => request('POST', path, body)
+const get  = (path, signal)       => request('GET',  path, undefined, signal)
+const post = (path, body, signal) => request('POST', path, body, signal)
 
 // ─────────────────────────────────────────────
 // Auth
@@ -52,9 +53,10 @@ export const authMe = (studentId) => get(`/api/auth/me?student_id=${encodeURICom
 /**
  * Fetch the next tutoring question for a student on a concept.
  * @param {{ student_id: string, current_concept: string }} params
+ * @param {AbortSignal} [signal]
  * @returns {{ question: string, strategy: string, context: string }}
  */
-export const tutoringQuestion = (params) => post('/api/tutoring/question', params)
+export const tutoringQuestion = (params, signal) => post('/api/tutoring/question', params, signal)
 
 /**
  * Submit a student answer for grading and memory logging.

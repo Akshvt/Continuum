@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { authMe } from '../lib/api'
+import { useBackend } from './BackendContext'
 
 const STORAGE_KEY = 'continuum_auth'
 
@@ -21,11 +22,18 @@ export function AuthProvider({ children }) {
   })
 
   const [loading, setLoading] = useState(true)
+  const { status } = useBackend()
 
   // Validate stored credential on page load
   useEffect(() => {
     if (!auth?.student_id) {
       setLoading(false)
+      return
+    }
+
+    // Wait until backend is awake before validating, so we don't accidentally
+    // log the user out due to a 502 Bad Gateway during cold start.
+    if (status !== 'ready') {
       return
     }
 
@@ -36,7 +44,7 @@ export function AuthProvider({ children }) {
         setAuth(null)
       })
       .finally(() => setLoading(false))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback((authData) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(authData))
