@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections import defaultdict, deque
 from typing import Any
@@ -194,35 +195,45 @@ async def generate_tutoring_question(student_id: str, current_concept: str) -> d
     display_current = _display_concept(normalized_current)
 
     # Dynamic strategy selection based on student history
-    try:
-        teaching_style = await choose_teaching_style(student_id, normalized_current)
-    except Exception as exc:
-        logger.warning("strategy selection failed (%s), using default", exc)
-        teaching_style = DEFAULT_TEACHING_STYLE
+    async def safe_choose_teaching_style():
+        try:
+            return await choose_teaching_style(student_id, normalized_current)
+        except Exception as exc:
+            logger.warning("strategy selection failed (%s), using default", exc)
+            return DEFAULT_TEACHING_STYLE
 
-    try:
-        student_results = await recall_student_context(
-            student_id,
-            (
-                f"What weak points, misconceptions, or recent struggles does this student have "
-                f"that matter for {display_current}?"
-            ),
-        )
-    except Exception as exc:
-        logger.warning("student recall failed (%s)", exc)
-        student_results = []
+    async def safe_recall_student():
+        try:
+            return await recall_student_context(
+                student_id,
+                (
+                    f"What weak points, misconceptions, or recent struggles does this student have "
+                    f"that matter for {display_current}?"
+                ),
+            )
+        except Exception as exc:
+            logger.warning("student recall failed (%s)", exc)
+            return []
 
-    try:
-        curriculum_results = await recall(
-            (
-                f"For {display_current}, what prerequisites or dependent concepts should the tutor "
-                f"focus on first?"
-            ),
-            datasets=[config.CURRICULUM_DATASET],
-        )
-    except Exception as exc:
-        logger.warning("curriculum recall failed (%s)", exc)
-        curriculum_results = []
+    async def safe_recall_curriculum():
+        try:
+            return await recall(
+                (
+                    f"For {display_current}, what prerequisites or dependent concepts should the tutor "
+                    f"focus on first?"
+                ),
+                datasets=[config.CURRICULUM_DATASET],
+            )
+        except Exception as exc:
+            logger.warning("curriculum recall failed (%s)", exc)
+            return []
+
+    # Run the 3 independent context gathers concurrently to significantly reduce latency
+    teaching_style, student_results, curriculum_results = await asyncio.gather(
+        safe_choose_teaching_style(),
+        safe_recall_student(),
+        safe_recall_curriculum(),
+    )
 
     student_text = _render_results(student_results)
     curriculum_text = _render_results(curriculum_results) or curriculum_context()
