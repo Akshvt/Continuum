@@ -1,0 +1,142 @@
+.footer-revealer {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+}
+
+.site-footer {
+  position: fixed;
+  top: 0;
+  left: 51px;
+  right: 51px;
+  height: 100svh;
+  background-color: var(--paper);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.footer-images {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.footer-hand-img {
+  position: relative;
+  width: 42%;
+  min-width: 220px;
+  will-change: transform;
+}
+
+.footer-hand-img img {
+  display: block;
+  width: 100%;
+  opacity: 0;
+}
+
+.footer-hand-img canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.footer-foreground {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem 2rem;
+  pointer-events: none;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  pointer-events: auto;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer-links a {
+  color: var(--ink);
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.footer-links a:hover {
+  opacity: 1;
+}
+
+.footer-text p {
+  max-width: 360px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--grey-700);
+}
+
+.footer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  color: var(--ink);
+}
+
+.footer-header h1 {
+  font-size: clamp(3rem, 14vw, 13rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  overflow: hidden;
+}
+
+@media (max-width: 1000px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .footer-text p {
+    max-width: 100%;
+  }
+
+  /* SplitText wraps every letter in its own inline-block span for the
+     reveal animation, so a too-narrow container doesn't just overflow —
+     the browser wraps the line between individual letters, breaking the
+     word apart. Stacking + scaling the font down keeps each word within
+     its own full-width line so it never needs to break. */
+  .footer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .footer-header h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+}
+
+/* Keep in sync with the .page-frame margin-inline breakpoint in index.css —
+   the footer is fixed and must line up with the same border position. */
+@media (max-width: 640px) {
+  .site-footer {
+    left: 17px;
+    right: 17px;
+  }
+
+  .footer-foreground {
+    padding-top: 4rem;
+  }
+}
