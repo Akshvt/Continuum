@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: continuum-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_LLM_PROVIDER
+        value: mistral
+      - key: APP_LLM_MODEL
+        value: mistral-medium-latest
+      - key: LLM_PROVIDER
+        value: mistral
+      - key: LLM_MODEL
+        value: mistral/mistral-medium-latest
+      - key: EMBEDDING_PROVIDER
+        value: mistral
+      - key: EMBEDDING_MODEL
+        value: mistral/mistral-embed
+      - key: LITELLM_DROP_PARAMS
+        value: "true"
+      - key: ENABLE_BACKEND_ACCESS_CONTROL
+        value: "false"
+      - key: COGNEE_SKIP_CONNECTION_TEST
+        value: "true"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://continuum-frontend-placeholder.vercel.app"
+      - key: APP_LLM_API_KEY
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: EMBEDDING_API_KEY
+        sync: false
