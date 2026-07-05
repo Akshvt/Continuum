@@ -37,6 +37,7 @@ function BackendGate({ children }) {
         <h2 style={{ marginTop: '24px', fontWeight: 500, letterSpacing: '-0.02em' }}>Waking up your tutor...</h2>
         <p style={{ opacity: 0.6, marginTop: '4px', fontSize: '13px' }}>(backend)</p>
         <p style={{ opacity: 0.6, marginTop: '12px', fontSize: '14px' }}>This may take a moment on cold starts.</p>
+        <p style={{ color: '#f59e0b', opacity: 0.9, marginTop: '16px', fontSize: '13px', fontWeight: 500 }}>⚠️ Note for Brave users: Turn off Brave Shields</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
