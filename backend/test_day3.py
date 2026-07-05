@@ -25,7 +25,7 @@ from memory import get_lifecycle_log, LOG_PATH  # noqa: E402
 
 STUDENT_ID = "test_student_day3"
 CONCEPT = "variables"
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://continuum-fj6v.onrender.com"
 
 
 async def main():
