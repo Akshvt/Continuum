@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from cognee_ops import recall, remember
 from config import config
@@ -13,7 +14,7 @@ CURRICULUM_MARKER = BASE_DIR / ".curriculum_seeded"
 CURRICULUM_DATASET = config.CURRICULUM_DATASET
 
 
-CURRICULUM_LADDER: list[dict[str, object]] = [
+CURRICULUM_LADDER: list[dict[str, Any]] = [
     {
         "concept": "literals_and_values",
         "prerequisites": [],
