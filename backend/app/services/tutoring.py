@@ -101,6 +101,13 @@ _QUESTION_FORMATS = [
     "Fix-the-bug: 'This code has an error — what is wrong and how would you fix it?'",
     "True-or-false with justification: 'True or false: ___ — explain your reasoning.'",
     "Short-answer application: 'Write one line of Python that demonstrates ___.'",
+    "Reverse engineering: 'The output is `Hello World`. Write a single line of Python that produces this.'",
+    "Explain like I'm 5: 'How would you explain the concept of ___ to someone who has never coded before?'",
+    "Spot the difference: 'Code A does X, Code B does Y. What causes this difference?'",
+    "Real-world analogy: 'If variables are like labeled boxes, what is a literal?'",
+    "Refactoring: 'How could you rewrite this code to be more readable while keeping the same behavior?'",
+    "Edge case testing: 'What happens if we pass a negative number or zero to this piece of code?'",
+    "Multiple choice (conceptual): 'Which of these three statements about ___ is false, and why?'",
 ]
 
 # Per-student cache of recently generated questions (kept in memory, lost on restart).
