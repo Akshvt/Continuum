@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ router = APIRouter()
 # ─────────────────────────────────────────────
 
 def _student_id_from_email(email: str) -> str:
-    """Derive a stable, URL-safe student identifier from an email address."""
+    """Derive a stable, URL-safe student identifier from an email address or name."""
     return "s_" + hashlib.sha256(email.lower().strip().encode()).hexdigest()[:16]
 
 
@@ -34,7 +34,9 @@ def _student_id_from_email(email: str) -> str:
 # ─────────────────────────────────────────────
 
 class AuthRequest(BaseModel):
-    email: EmailStr
+    # Field is kept as "email" for backward compatibility with frontend
+    # but now accepts any non-empty string (e.g. arbitrary student names).
+    email: str = Field(min_length=1, max_length=100)
 
 
 class AuthResponse(BaseModel):
