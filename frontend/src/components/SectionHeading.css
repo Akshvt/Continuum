@@ -1,0 +1,19 @@
+.section-heading-block {
+  padding: 96px 40px 64px;
+  background-color: var(--paper);
+}
+
+.section-heading {
+  text-align: right;
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .section-heading-block {
+    padding: 56px 24px 40px;
+  }
+}
