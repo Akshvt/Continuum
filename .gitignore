@@ -1,1 +1,36 @@
-.env
+# IDE / OS specific ignores
+.code-review-graph/
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Backend specific ignores (also covered by backend/.gitignore)
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/venv/
+backend/.venv/
+backend/test_venv/
+*.venv/
+venv/
+backend/lifecycle_log.json
+backend/.curriculum_seeded
+
+# Frontend specific ignores (also covered by frontend/.gitignore)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/logs/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*

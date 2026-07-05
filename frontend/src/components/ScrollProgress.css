@@ -1,0 +1,58 @@
+.scroll-progress {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  height: 480px;
+  transform: translateY(-50%);
+  z-index: 50;
+  pointer-events: none;
+  display: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-progress.is-hidden,
+.scroll-progress.is-idle {
+  opacity: 0;
+}
+
+@media (min-width: 900px) {
+  .scroll-progress {
+    display: block;
+  }
+}
+
+.scroll-progress-track {
+  position: relative;
+  width: 1px;
+  height: 100%;
+  margin: 0 auto;
+  background: var(--line);
+}
+
+.scroll-progress-thumb {
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+
+.scroll-progress-thumb::before,
+.scroll-progress-thumb::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 9px;
+  height: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+
+.scroll-progress-thumb::before {
+  top: 0;
+}
+
+.scroll-progress-thumb::after {
+  bottom: 0;
+}
