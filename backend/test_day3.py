@@ -25,7 +25,7 @@ from memory import get_lifecycle_log, LOG_PATH  # noqa: E402
 
 STUDENT_ID = "test_student_day3"
 CONCEPT = "variables"
-BASE_URL = "https://continuum-fj6v.onrender.com"
+BASE_URL = "http://localhost:8001"
 
 
 async def main():
@@ -137,6 +137,18 @@ async def main():
         print("VERIFICATION: Checking lifecycle_log.json")
         print("=" * 60)
 
+        # Polling loop because background tasks take time to write to the log
+        max_attempts = 15
+        for attempt in range(max_attempts):
+            log = get_lifecycle_log(STUDENT_ID)
+            ops = [e["operation"] for e in log]
+            
+            remember_count = ops.count("remember")
+            if remember_count >= 5:
+                break
+            print(f"  [Wait] Found {remember_count}/5 remember events. Waiting 2s for background tasks... (Attempt {attempt+1}/{max_attempts})")
+            await asyncio.sleep(2)
+            
         log = get_lifecycle_log(STUDENT_ID)
         ops = [e["operation"] for e in log]
 
@@ -164,14 +176,14 @@ async def main():
         print(f"\n  Operations used: {sorted(used_ops)}")
 
         if missing:
-            print(f"\n  ⚠️  MISSING operations: {sorted(missing)}")
+            print(f"\n  [WARNING] MISSING operations: {sorted(missing)}")
             print("  Some triggers may not have fired — check output above.")
         else:
-            print("\n  ✅ ALL FOUR PRIMITIVES fired successfully!")
+            print("\n  [SUCCESS] ALL FOUR PRIMITIVES fired successfully!")
 
         # Assertions
         assert remember_count >= 5, f"Expected ≥5 remember events, got {remember_count}"
-        print("\n  ✅ remember: PASS (≥5 events)")
+        print("\n  remember: PASS (≥5 events)")
 
         # recall fires during question generation and strategy selection
         assert recall_count >= 1, f"Expected ≥1 recall event, got {recall_count}"
