@@ -19,7 +19,7 @@ from types import SimpleNamespace
 logger = logging.getLogger("continuum.cognee_ops")
 
 # Maximum seconds to wait for short operations (recall, forget)
-COGNEE_TIMEOUT_SECONDS: float = 30.0
+COGNEE_TIMEOUT_SECONDS: float = 5.0
 # Generous timeout for long-running memory generation (cognify)
 COGNEE_REMEMBER_TIMEOUT_SECONDS: float = 360.0
 
@@ -90,7 +90,7 @@ async def recall(query: str, datasets: list[str], **kwargs: Any) -> list[Any]:
         async with _get_client() as client:
             payload = {
                 "query": query,
-                "searchType": "GRAPH_COMPLETION",
+                "searchType": "SUMMARY",
                 "datasets": datasets
             }
             r = await client.post("/api/v1/search", json=payload, timeout=COGNEE_TIMEOUT_SECONDS)
