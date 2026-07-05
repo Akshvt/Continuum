@@ -76,6 +76,10 @@ def health():
         "service": "Never Lose the Plot",
     }
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "API is running"}
+
 
 __all__ = ["app", "remember", "recall", "improve", "forget"]
 
