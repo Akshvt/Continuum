@@ -76,7 +76,7 @@ CURRICULUM_LADDER: list[dict[str, object]] = [
     },
 ]
 
-CURRICULUM_CONCEPTS = [entry["concept"] for entry in CURRICULUM_LADDER]
+CURRICULUM_CONCEPTS: list[str] = [str(entry["concept"]) for entry in CURRICULUM_LADDER]
 CURRICULUM_PREREQUISITES = {
     entry["concept"]: list(entry["prerequisites"])
     for entry in CURRICULUM_LADDER
