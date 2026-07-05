@@ -123,7 +123,7 @@ function Hero() {
           </h2>
 
           <div className="hero-actions">
-            <Link to="/signup" className="btn btn-primary">
+            <Link to="/login" className="btn btn-primary">
               Let&apos;s Get Started
             </Link>
             <a href="#how-it-adapts" className="btn btn-outline">

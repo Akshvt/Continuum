@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { GoogleIcon } from '../components/AuthIcons'
 import { useAuth } from '../context/AuthContext.jsx'
-import { authSignup } from '../lib/api.js'
-import './Login.css'
+import { authLogin } from '../lib/api.js'
+import './Entry.css'
 
-function SignUp() {
+function Entry() {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [email, setEmail] = useState('')
@@ -17,11 +16,11 @@ function SignUp() {
     setError('')
     setLoading(true)
     try {
-      const authData = await authSignup(email)
+      const authData = await authLogin(email)
       login(authData)
       navigate('/app')
     } catch (err) {
-      setError(err.message ?? 'Sign up failed. Please try again.')
+      setError(err.message ?? 'Sign in failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -36,27 +35,16 @@ function SignUp() {
           </Link>
 
           <div className="login-form-wrap">
-            <h1>Create your account</h1>
+            <h1>Welcome to Continuum</h1>
             <p className="login-subtitle">
-              Start remembering every session, for every student.
+              Enter your name or student ID to start learning.
             </p>
 
-            <div className="login-oauth">
-              <button type="button" className="btn-oauth" disabled>
-                <GoogleIcon />
-                Sign up with Google
-              </button>
-            </div>
-
-            <div className="login-divider">
-              <span>Or</span>
-            </div>
-
-            <form className="login-email-form" onSubmit={handleSubmit}>
+            <form className="login-email-form" onSubmit={handleSubmit} style={{ marginTop: '32px' }}>
               <input
-                type="email"
+                type="text"
                 name="email"
-                placeholder="Enter your email"
+                placeholder="Enter your name"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -64,13 +52,9 @@ function SignUp() {
               />
               {error && <p className="login-error">{error}</p>}
               <button type="submit" className="btn-email" disabled={loading}>
-                {loading ? 'Creating account…' : 'Sign up with email'}
+                {loading ? 'Entering…' : 'Start learning'}
               </button>
             </form>
-
-            <p className="login-signup">
-              Already have an account? <Link to="/login">Sign In</Link>
-            </p>
           </div>
 
           <div className="login-footer-links">
@@ -88,4 +72,4 @@ function SignUp() {
   )
 }
 
-export default SignUp
+export default Entry

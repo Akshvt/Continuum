@@ -2,8 +2,7 @@ import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-route
 import { useAuth } from './context/AuthContext.jsx'
 import { useBackend } from './context/BackendContext.jsx'
 import Home from './pages/Home'
-import Login from './pages/Login'
-import SignUp from './pages/SignUp'
+import Entry from './pages/Entry'
 import Session from './pages/Session'
 import AdaptiveLearningPage from './pages/AdaptiveLearningPage'
 import ForStudents from './pages/ForStudents'
@@ -73,8 +72,8 @@ function App() {
       <BackendGate>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Entry />} />
+          <Route path="/signup" element={<Navigate to="/login" replace />} />
           <Route
             path="/app"
             element={
